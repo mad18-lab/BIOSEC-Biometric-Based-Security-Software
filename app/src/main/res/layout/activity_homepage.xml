@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#c1e9eb">
+
+    <!-- Heading -->
+    <TextView
+        android:layout_width="384dp"
+        android:layout_height="162dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="106dp"
+        android:layout_marginEnd="14dp"
+        android:text="BioSec"
+        android:textAlignment="center"
+        android:textSize="106sp"
+        android:typeface="monospace"
+        android:fontFamily="@font/font"/>
+
+    <!-- Notification Icon -->
+    <ImageView
+        android:id="@+id/notificationIcon"
+        android:layout_width="44dp"
+        android:layout_height="51dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:src="@drawable/bell" />
+
+</RelativeLayout>

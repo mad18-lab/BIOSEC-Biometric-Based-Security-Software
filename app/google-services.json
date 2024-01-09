@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "119412640329",
+    "firebase_url": "https://biosec-5362c-default-rtdb.firebaseio.com",
+    "project_id": "biosec-5362c",
+    "storage_bucket": "biosec-5362c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:119412640329:android:95b88927a50003e1a0cd98",
+        "android_client_info": {
+          "package_name": "com.example.biosec"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "119412640329-6tenj01k426ti6df490bf8r47ut54evv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.biosec",
+            "certificate_hash": "8b1b13ad490b250c1386f3f0bba41507e6017a0c"
+          }
+        },
+        {
+          "client_id": "119412640329-hs701elsjuv968i9pp4n8cmj3nggplb1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB78zVncLXS9gG6ZdHPbE0gTKpKSIQ0iuE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "119412640329-hs701elsjuv968i9pp4n8cmj3nggplb1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

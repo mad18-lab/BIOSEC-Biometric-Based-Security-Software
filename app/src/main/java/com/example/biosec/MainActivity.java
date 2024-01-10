@@ -37,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FirebaseApp.initializeApp(this);
-        setContentView(R.layout.activity_main);
+        FirebaseApp.initializeApp(this);    //to initialize FirebaseApp
+        setContentView(R.layout.activity_main);     //setting the layout of the landing page to activity_main
 
         googleAuth = findViewById(R.id.login);
         mAuth = FirebaseAuth.getInstance();
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        googleAuth.setOnClickListener(new View.OnClickListener() {
+        googleAuth.setOnClickListener(new View.OnClickListener() {      //what to do on clicking the login with google button
             @Override
             public void onClick(View view) {
                 googleSignIn();
@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, RC_SIGN_IN);
     }
 
+    //method to implement functionalities following a successful sign-in
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

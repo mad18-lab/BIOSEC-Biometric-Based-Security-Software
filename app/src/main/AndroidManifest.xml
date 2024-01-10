@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- permissions to successfully launch the app -->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <application
@@ -27,6 +28,8 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+
+        <!-- redirect the user to the HomePageActivity following a successful sign-in -->
         <activity android:name=".HomePageActivity" />
     </application>
 

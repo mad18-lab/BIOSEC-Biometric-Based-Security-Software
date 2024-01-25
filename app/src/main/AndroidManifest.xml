@@ -5,6 +5,11 @@
     <!-- permissions to successfully launch the app -->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- permission to use biometric features in the app and to install the app
+    even on devices which don't have the fingerprint sensor -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"
+        android:requiredFeature="false"/>
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"

@@ -5,6 +5,13 @@
     android:layout_height="match_parent"
     android:background="@drawable/dialog_bg">
 
+    <ImageView
+        android:layout_width="70dp"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_baseline_remove_24"
+        android:layout_gravity="center|top"
+        android:scaleType="centerCrop"/>
+
     <TextView
         android:id="@+id/heading_text"
         android:layout_width="match_parent"
@@ -24,5 +31,12 @@
         android:layout_height="351dp"
         android:orientation="horizontal"
         android:padding="8dp" />
+
+    <ImageView
+        android:layout_width="70dp"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_baseline_remove_24"
+        android:layout_gravity="center|top"
+        android:scaleType="centerCrop"/>
 
 </LinearLayout>

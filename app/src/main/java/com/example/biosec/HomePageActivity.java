@@ -1,10 +1,13 @@
 package com.example.biosec;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.app.Dialog;
 import android.content.Intent;
@@ -12,6 +15,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -26,6 +30,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.concurrent.Executor;
@@ -37,11 +42,54 @@ public class HomePageActivity extends AppCompatActivity {
     GoogleSignInClient gsc;
     BiometricPrompt biometricPrompt = null;
     Executor executor = Executors.newSingleThreadExecutor();
+    DrawerLayout drawerLayout;
+    NavigationView navigationView;
+    ActionBarDrawerToggle drawerToggle;
+
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if(drawerToggle.onOptionsItemSelected(item))
+        {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_homepage);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.nav_view);
+        drawerToggle = new ActionBarDrawerToggle(this,drawerLayout,R.string.open,R.string.close);
+        drawerLayout.addDrawerListener(drawerToggle);
+        drawerToggle.syncState();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.passcodes:
+                        Toast.makeText(HomePageActivity.this, "Passcodes Will Be Displayed Here", Toast.LENGTH_SHORT).show();
+                        break;
+
+                    case R.id.devices:
+                        Toast.makeText(HomePageActivity.this, "Devices Enrolled Will Be Displayed Here", Toast.LENGTH_SHORT).show();
+                        break;
+
+                    case R.id.prompt:
+                        checkAndauth();
+                        break;
+
+                    case R.id.logOut:
+                        signOut();
+                        break;
+                }
+                return false;
+            }
+        });
 
         ImageView notificationIcon = findViewById(R.id.notificationIcon);   //notification icon
         notificationIcon.setOnClickListener(new View.OnClickListener() {
@@ -52,8 +100,8 @@ public class HomePageActivity extends AppCompatActivity {
         });
 
         mAuth = FirebaseAuth.getInstance();     //for signing users out
-        btnLogOut = findViewById(R.id.logout);  //button to sign users out
-        btnBiometric = findViewById(R.id.biometric);    //button to get biometric prompt
+//        btnLogOut = findViewById(R.id.logout);  //button to sign users out
+//        btnBiometric = findViewById(R.id.biometric);    //button to get biometric prompt
 
         //functionality to sign users out
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -63,23 +111,35 @@ public class HomePageActivity extends AppCompatActivity {
 
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
 
-        btnLogOut.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                signOut();
-            }
-        });
+//        btnLogOut.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                signOut();
+//            }
+//        });
 
         if(biometricPrompt==null){
             biometricPrompt=new BiometricPrompt(this,executor,callback);
         }
 
-        btnBiometric.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                checkAndauth();
-            }
-        });
+//        btnBiometric.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                checkAndauth();
+//            }
+//        });
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(drawerLayout.isDrawerOpen(GravityCompat.START))
+        {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        }
+        else
+        {
+            super.onBackPressed();
+        }
     }
 
     private void showDialog() {

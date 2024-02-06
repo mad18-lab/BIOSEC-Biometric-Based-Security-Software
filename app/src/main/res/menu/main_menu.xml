@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/passcodes"
+            android:icon="@drawable/ic_baseline_shield_24"
+            android:title="Passcodes"
+            />
+        <item android:id="@+id/devices"
+            android:icon="@drawable/ic_baseline_devices_24"
+            android:title="Devices"
+            />
+        <item android:id="@+id/prompt"
+            android:icon="@drawable/ic_baseline_fingerprint_24"
+            android:title="Biometric Prompt"
+            />
+        <item android:id="@+id/logOut"
+            android:icon="@drawable/ic_baseline_logout_24"
+            android:title="Logout"
+            />
+    </group>
+
+</menu>

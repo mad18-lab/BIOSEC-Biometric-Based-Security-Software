@@ -38,14 +38,12 @@ import java.util.concurrent.Executors;
 
 public class HomePageActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
-    Button btnLogOut, btnBiometric;
     GoogleSignInClient gsc;
     BiometricPrompt biometricPrompt = null;
     Executor executor = Executors.newSingleThreadExecutor();
     DrawerLayout drawerLayout;
     NavigationView navigationView;
     ActionBarDrawerToggle drawerToggle;
-
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -100,8 +98,6 @@ public class HomePageActivity extends AppCompatActivity {
         });
 
         mAuth = FirebaseAuth.getInstance();     //for signing users out
-//        btnLogOut = findViewById(R.id.logout);  //button to sign users out
-//        btnBiometric = findViewById(R.id.biometric);    //button to get biometric prompt
 
         //functionality to sign users out
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -111,23 +107,9 @@ public class HomePageActivity extends AppCompatActivity {
 
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
 
-//        btnLogOut.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                signOut();
-//            }
-//        });
-
         if(biometricPrompt==null){
             biometricPrompt=new BiometricPrompt(this,executor,callback);
         }
-
-//        btnBiometric.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                checkAndauth();
-//            }
-//        });
     }
 
     @Override
@@ -142,6 +124,7 @@ public class HomePageActivity extends AppCompatActivity {
         }
     }
 
+    //for bottom sheet notification dialog
     private void showDialog() {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);

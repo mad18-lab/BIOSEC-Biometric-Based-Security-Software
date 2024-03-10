@@ -10,6 +10,11 @@
     even on devices which don't have the fingerprint sensor -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"
         android:requiredFeature="false"/>
+
+    <!-- permission to use camera for QR code scanner -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.hardware.CAMERA" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"

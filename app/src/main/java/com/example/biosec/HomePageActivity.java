@@ -1,6 +1,7 @@
 package com.example.biosec;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricManager;
@@ -36,6 +37,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
 public class HomePageActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     GoogleSignInClient gsc;
@@ -44,6 +48,7 @@ public class HomePageActivity extends AppCompatActivity {
     DrawerLayout drawerLayout;
     NavigationView navigationView;
     ActionBarDrawerToggle drawerToggle;
+    Button scanButton;
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -64,6 +69,7 @@ public class HomePageActivity extends AppCompatActivity {
         drawerLayout.addDrawerListener(drawerToggle);
         drawerToggle.syncState();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        scanButton = findViewById(R.id.scanner);
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -97,6 +103,17 @@ public class HomePageActivity extends AppCompatActivity {
             }
         });
 
+        scanButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //initializing ZXing integrator
+                IntentIntegrator integrator = new IntentIntegrator(HomePageActivity.this);
+                integrator.setPrompt("Scan a QR Code");
+                integrator.setOrientationLocked(false);
+                integrator.initiateScan();
+            }
+        });
+
         mAuth = FirebaseAuth.getInstance();     //for signing users out
 
         //functionality to sign users out
@@ -109,6 +126,28 @@ public class HomePageActivity extends AppCompatActivity {
 
         if(biometricPrompt==null){
             biometricPrompt=new BiometricPrompt(this,executor,callback);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            if (result.getContents() == null) {
+                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
+            } else {
+                // Handle the scanned QR code data
+                String scannedData = result.getContents();
+                if (scannedData.equals("YOUR_DEVICE_ID")) {
+                    // Device ID matched, do something
+                    Toast.makeText(this, "Device ID matched: " + scannedData, Toast.LENGTH_LONG).show();
+                } else {
+                    // Device ID didn't match
+                    Toast.makeText(this, "Invalid device ID", Toast.LENGTH_LONG).show();
+                }
+            }
         }
     }
 

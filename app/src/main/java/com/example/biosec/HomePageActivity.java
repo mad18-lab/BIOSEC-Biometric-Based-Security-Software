@@ -109,8 +109,8 @@ public class HomePageActivity extends AppCompatActivity {
                 //initializing ZXing integrator
                 IntentIntegrator integrator = new IntentIntegrator(HomePageActivity.this);
                 integrator.setPrompt("Scan a QR Code");
-                integrator.setOrientationLocked(false);
-                integrator.initiateScan();
+                integrator.setOrientationLocked(true);  //to lock the screen orientation as portrait
+                integrator.initiateScan();              //initiate scan
             }
         });
 
@@ -129,6 +129,7 @@ public class HomePageActivity extends AppCompatActivity {
         }
     }
 
+    //handle the result of the QR code scan
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

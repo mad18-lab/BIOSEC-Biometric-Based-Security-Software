@@ -185,6 +185,7 @@ public class HomePageActivity extends AppCompatActivity {
         //Making a POST request to register the device
         Call<Void> call = service.registerDevice(requestBody);
         call.enqueue(new Callback<Void>() {
+            @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
                     //device registered successfully
@@ -195,6 +196,7 @@ public class HomePageActivity extends AppCompatActivity {
                 }
             }
 
+            @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 // Network error
                 Toast.makeText(HomePageActivity.this, "Network error", Toast.LENGTH_SHORT).show();

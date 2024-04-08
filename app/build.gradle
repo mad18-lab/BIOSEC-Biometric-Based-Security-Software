@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.biosec"
-        minSdk 27
+        minSdk 29
         targetSdk 32
         versionCode 1
         versionName "1.0"
@@ -51,6 +51,12 @@ dependencies {
     //dependency for QR Code Scanner
     implementation 'com.google.zxing:core:3.4.1'
     implementation 'com.journeyapps:zxing-android-embedded:4.2.0'
+
+    //dependency for making request to the server
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+
+    //dependency to help Retrofit convert JSON response bodies to Java objects and vice versa
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

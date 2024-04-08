@@ -6,7 +6,6 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -14,6 +13,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.DnsResolver;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -39,6 +39,16 @@ import java.util.concurrent.Executors;
 
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+
+import com.example.biosec.network.YourApiService;
+
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import retrofit2.Callback;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class HomePageActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
@@ -108,6 +118,7 @@ public class HomePageActivity extends AppCompatActivity {
             public void onClick(View view) {
                 //initializing ZXing integrator
                 IntentIntegrator integrator = new IntentIntegrator(HomePageActivity.this);
+                integrator.setCaptureActivity(HomePageActivity.class);
                 integrator.setPrompt("Scan a QR Code");
                 integrator.setOrientationLocked(true);  //to lock the screen orientation as portrait
                 integrator.initiateScan();              //initiate scan
@@ -132,8 +143,6 @@ public class HomePageActivity extends AppCompatActivity {
     //handle the result of the QR code scan
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if (result != null) {
             if (result.getContents() == null) {
@@ -141,16 +150,96 @@ public class HomePageActivity extends AppCompatActivity {
             } else {
                 // Handle the scanned QR code data
                 String scannedData = result.getContents();
-                if (scannedData.equals("YOUR_DEVICE_ID")) {
-                    // Device ID matched, do something
-                    Toast.makeText(this, "Device ID matched: " + scannedData, Toast.LENGTH_LONG).show();
-                } else {
-                    // Device ID didn't match
-                    Toast.makeText(this, "Invalid device ID", Toast.LENGTH_LONG).show();
-                }
+                processScannedData(scannedData);    //call method to process scanned data
+//                if (scannedData.equals("YOUR_DEVICE_ID")) {
+//                    // Device ID matched, do something
+//                    Toast.makeText(this, "Device ID matched: " + scannedData, Toast.LENGTH_LONG).show();
+//                } else {
+//                    // Device ID didn't match
+//                    Toast.makeText(this, "Invalid device ID", Toast.LENGTH_LONG).show();
+//                }
             }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
+    //device registration process
+    private void processScannedData(String scannedData) {
+        //send the scanned data to the server for registration
+        registerDeviceWithServer(scannedData);
+    }
+
+    private void registerDeviceWithServer(String scannedData) {
+        //here we will send scanned data to server using Retrofit library
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://your-server.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        YourApiService service = retrofit.create(YourApiService.class);
+
+        //creating a request body containing the scanned data
+        RequestBody requestBody = RequestBody.create(MediaType.parse("text/plain"), scannedData);
+
+        //Making a POST request to register the device
+        Call<Void> call = service.registerDevice(requestBody);
+        call.enqueue(new Callback<Void>() {
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    //device registered successfully
+                    Toast.makeText(HomePageActivity.this, "Device Registered Successfully", Toast.LENGTH_SHORT).show();
+                } else {
+                    //error registering device
+                    Toast.makeText(HomePageActivity.this, "Error Registering Device", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            public void onFailure(Call<Void> call, Throwable t) {
+                // Network error
+                Toast.makeText(HomePageActivity.this, "Network error", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    //communication process b/w the Android and Desktop apps using the REST API server
+    // Assuming you have a method to unlock folders
+    private void unlockFolders() {
+        // Assuming you have the authentication token obtained during registration
+        String authToken = "your_authentication_token";
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://your-server.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        YourApiService service = retrofit.create(YourApiService.class);
+
+        // Create a request body containing necessary data
+        RequestBody requestBody = RequestBody.create(MediaType.parse("text/plain"), authToken);
+
+        // Make a POST request to unlock folders
+        Call<Void> call = service.unlockFolders(requestBody);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    // Folders unlocked successfully
+                    Toast.makeText(HomePageActivity.this, "Folders unlocked successfully", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Error unlocking folders
+                    Toast.makeText(HomePageActivity.this, "Error unlocking folders", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                // Network error
+                Toast.makeText(HomePageActivity.this, "Network error", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 
     @Override
     public void onBackPressed() {

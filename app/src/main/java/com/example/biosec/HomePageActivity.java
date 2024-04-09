@@ -11,9 +11,9 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.DnsResolver;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -59,6 +59,7 @@ public class HomePageActivity extends AppCompatActivity {
     NavigationView navigationView;
     ActionBarDrawerToggle drawerToggle;
     Button scanButton;
+    SharedPreferences sharedPreferences;
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -120,8 +121,7 @@ public class HomePageActivity extends AppCompatActivity {
                 IntentIntegrator integrator = new IntentIntegrator(HomePageActivity.this);
                 integrator.setCaptureActivity(HomePageActivity.class);
                 integrator.setPrompt("Scan a QR Code");
-                integrator.setOrientationLocked(true);  //to lock the screen orientation as portrait
-                integrator.initiateScan();              //initiate scan
+                integrator.setOrientationLocked(false);  //to lock the screen orientation as portrait
             }
         });
 
@@ -133,7 +133,9 @@ public class HomePageActivity extends AppCompatActivity {
 
         gsc = GoogleSignIn.getClient(this, gso);
 
-        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+//        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+
+        sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);      //initalizing shared preferences
 
         if(biometricPrompt==null){
             biometricPrompt=new BiometricPrompt(this,executor,callback);
@@ -205,7 +207,7 @@ public class HomePageActivity extends AppCompatActivity {
     }
 
     //communication process b/w the Android and Desktop apps using the REST API server
-    // Assuming you have a method to unlock folders
+    //a method to unlock folders
     private void unlockFolders() {
         // Assuming you have the authentication token obtained during registration
         String authToken = "your_authentication_token";
@@ -319,13 +321,27 @@ public class HomePageActivity extends AppCompatActivity {
             }
     };
 
-    //method to sign users out
+    //method to sign users out from GoogleSignInClient
     void signOut() {
+        mAuth.signOut();
         gsc.signOut().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                finish();
-                startActivity(new Intent(HomePageActivity.this, MainActivity.class));
+                if (task.isSuccessful()) {
+                    // Clear saved authentication state
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("isLoggedIn", false);
+                    editor.apply();
+
+                    // Redirect to MainActivity
+                    Intent intent = new Intent(HomePageActivity.this, MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    // Handle sign-out failure
+                    Toast.makeText(HomePageActivity.this, "Sign out failed", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

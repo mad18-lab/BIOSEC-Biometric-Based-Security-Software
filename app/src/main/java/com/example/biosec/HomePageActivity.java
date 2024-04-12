@@ -12,6 +12,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -74,6 +75,7 @@ public class HomePageActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);  //to lock the home page screen as portrait
         setContentView(R.layout.activity_homepage);
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
@@ -82,6 +84,31 @@ public class HomePageActivity extends AppCompatActivity {
         drawerToggle.syncState();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         scanButton = findViewById(R.id.scanner);
+
+        mAuth = FirebaseAuth.getInstance();     //for signing users out
+
+        //functionality to sign users out
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail().build();
+
+        gsc = GoogleSignIn.getClient(this, gso);
+
+//        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+
+        sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);      //initalizing shared preferences
+
+        String userName = sharedPreferences.getString("userName", "Default Name");
+
+        // Update the navigation drawer header with the user's name
+        updateNavigationDrawerHeader(userName);
+
+        ImageView notificationIcon = findViewById(R.id.notificationIcon);   //notification icon
+        notificationIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialog();
+            }
+        });
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -107,43 +134,19 @@ public class HomePageActivity extends AppCompatActivity {
             }
         });
 
-        ImageView notificationIcon = findViewById(R.id.notificationIcon);   //notification icon
-        notificationIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showDialog();
-            }
-        });
-
         scanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //initializing ZXing integrator
                 IntentIntegrator integrator = new IntentIntegrator(HomePageActivity.this);
-                integrator.setCaptureActivity(HomePageActivity.class);
                 integrator.setPrompt("Scan a QR Code");
                 integrator.setOrientationLocked(false);  //to lock the screen orientation as portrait
+                integrator.initiateScan();
             }
         });
 
-        mAuth = FirebaseAuth.getInstance();     //for signing users out
 
-        //functionality to sign users out
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail().build();
-
-        gsc = GoogleSignIn.getClient(this, gso);
-
-//        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
-
-        sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);      //initalizing shared preferences
-
-        String userName = sharedPreferences.getString("userName", "Default Name");
-
-        // Update the navigation drawer header with the user's name
-        updateNavigationDrawerHeader(userName);
-
-        if(biometricPrompt==null){
+        if (biometricPrompt==null){
             biometricPrompt=new BiometricPrompt(this,executor,callback);
         }
     }
@@ -158,6 +161,18 @@ public class HomePageActivity extends AppCompatActivity {
 
         // Update the TextView with the concatenated message
         textViewUserName.setText(welcomeMessage);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(drawerLayout.isDrawerOpen(GravityCompat.START))
+        {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        }
+        else
+        {
+            super.onBackPressed();
+        }
     }
 
     //handle the result of the QR code scan
@@ -260,19 +275,6 @@ public class HomePageActivity extends AppCompatActivity {
                 Toast.makeText(HomePageActivity.this, "Network error", Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-
-    @Override
-    public void onBackPressed() {
-        if(drawerLayout.isDrawerOpen(GravityCompat.START))
-        {
-            drawerLayout.closeDrawer(GravityCompat.START);
-        }
-        else
-        {
-            super.onBackPressed();
-        }
     }
 
     //for bottom sheet notification dialog

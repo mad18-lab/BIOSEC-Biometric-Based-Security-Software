@@ -40,7 +40,13 @@
         </activity>
 
         <!-- redirect the user to the HomePageActivity following a successful sign-in -->
-        <activity android:name=".HomePageActivity" />
+        <activity android:name=".HomePageActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation" />
     </application>
 
 </manifest>

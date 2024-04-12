@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -20,6 +21,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -48,9 +50,12 @@ public class MainActivity extends AppCompatActivity {
         database = FirebaseDatabase.getInstance();
 
         // Check if the user is already signed in
-        if (mAuth.getCurrentUser() != null) {
-            startActivity(new Intent(MainActivity.this, HomePageActivity.class));
-            finish(); // Finish the MainActivity to prevent going back to it when pressing back button from HomePageActivity
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            String userName = user.getDisplayName();
+            // Start HomeActivity directly if the user is already signed in
+            startHomeActivity(userName);
+            return; // Exit onCreate to prevent continuing execution
         }
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -95,10 +100,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Save authentication state locally
-                            saveAuthenticationState();
-
                             FirebaseUser user = mAuth.getCurrentUser();
+
+                            // Save the user's name to SharedPreferences
+                            saveUserName(user.getDisplayName());
 
                             HashMap<String, Object> map = new HashMap<>();
                             map.put("id", user.getUid());
@@ -107,9 +112,8 @@ public class MainActivity extends AppCompatActivity {
 
                             database.getReference().child("users").child(user.getUid()).setValue(map);
 
-                            Intent intent = new Intent(MainActivity.this, HomePageActivity.class);
-                            startActivity(intent);
-                            finish(); // Finish the MainActivity to prevent going back to it when pressing back button from HomePageActivity
+                            // Start HomeActivity after successful sign-in
+                            startHomeActivity(user.getDisplayName());
                         } else {
                             Toast.makeText(MainActivity.this, "Something went wrong", Toast.LENGTH_SHORT).show();
                         }
@@ -117,11 +121,20 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    // Method to save authentication state locally
-    private void saveAuthenticationState() {
+    // Method to save the user's name to SharedPreferences
+    private void saveUserName(String userName) {
         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean("isLoggedIn", true);
+        editor.putString("userName", userName);
         editor.apply();
     }
+
+    // Method to start HomeActivity with the user's name
+    private void startHomeActivity(String userName) {
+        Intent intent = new Intent(MainActivity.this, HomePageActivity.class);
+        intent.putExtra("userName", userName);
+        startActivity(intent);
+        finish(); // Finish the MainActivity to prevent going back to it when pressing back button from HomePageActivity
+    }
 }
+

@@ -23,6 +23,7 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -137,9 +138,26 @@ public class HomePageActivity extends AppCompatActivity {
 
         sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);      //initalizing shared preferences
 
+        String userName = sharedPreferences.getString("userName", "Default Name");
+
+        // Update the navigation drawer header with the user's name
+        updateNavigationDrawerHeader(userName);
+
         if(biometricPrompt==null){
             biometricPrompt=new BiometricPrompt(this,executor,callback);
         }
+    }
+
+    // Function to update navigation drawer header with user's name
+    private void updateNavigationDrawerHeader(String userName) {
+        View headerView = navigationView.getHeaderView(0);
+        TextView textViewUserName = headerView.findViewById(R.id.textViewUserName);
+
+        // Concatenate "Welcome, " with the user's display name
+        String welcomeMessage = "Welcome, " + userName;
+
+        // Update the TextView with the concatenated message
+        textViewUserName.setText(welcomeMessage);
     }
 
     //handle the result of the QR code scan

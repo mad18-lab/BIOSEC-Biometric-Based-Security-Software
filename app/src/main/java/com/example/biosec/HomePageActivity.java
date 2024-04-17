@@ -178,25 +178,25 @@ public class HomePageActivity extends AppCompatActivity {
     //handle the result of the QR code scan
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if (result != null) {
-            if (result.getContents() == null) {
-                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
+            String scannedData = result.getContents();
+
+            if (scannedData != null && isValidQRCode(scannedData)) {
+                processScannedData(scannedData);
             } else {
-                // Handle the scanned QR code data
-                String scannedData = result.getContents();
-                processScannedData(scannedData);    //call method to process scanned data
-//                if (scannedData.equals("YOUR_DEVICE_ID")) {
-//                    // Device ID matched, do something
-//                    Toast.makeText(this, "Device ID matched: " + scannedData, Toast.LENGTH_LONG).show();
-//                } else {
-//                    // Device ID didn't match
-//                    Toast.makeText(this, "Invalid device ID", Toast.LENGTH_LONG).show();
-//                }
+                //display invalid QR code message
+                Toast.makeText(this, "Invalid QR Code", Toast.LENGTH_SHORT).show();
             }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    //method to validate whether QR code is in the correct format
+    private boolean isValidQRCode(String data) {
+        //validation logic here
+        return data.startsWith("PREFIX_");
     }
 
     //device registration process

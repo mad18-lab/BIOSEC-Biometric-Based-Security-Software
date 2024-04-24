@@ -46,6 +46,7 @@ import com.example.biosec.network.YourApiService;
 
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Callback;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -217,11 +218,11 @@ public class HomePageActivity extends AppCompatActivity {
         //creating a request body containing the scanned data
         RequestBody requestBody = RequestBody.create(MediaType.parse("text/plain"), scannedData);
 
-        //Making a POST request to register the device
-        Call<Void> call = service.registerDevice(requestBody);
-        call.enqueue(new Callback<Void>() {
+        //Making a POST request to connect the device
+        Call<ResponseBody> call = service.establishConnection(requestBody);
+        call.enqueue(new Callback<ResponseBody>() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
                     //device registered successfully
                     Toast.makeText(HomePageActivity.this, "Device Registered Successfully", Toast.LENGTH_SHORT).show();
@@ -232,7 +233,7 @@ public class HomePageActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
                 // Network error
                 Toast.makeText(HomePageActivity.this, "Network error", Toast.LENGTH_SHORT).show();
             }
@@ -322,23 +323,23 @@ public class HomePageActivity extends AppCompatActivity {
 
     //method to build and authenticate biometric prompt
     BiometricPrompt.AuthenticationCallback callback = new BiometricPrompt.AuthenticationCallback() {
-            @Override
-            public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
-                if (biometricPrompt != null)
-                    biometricPrompt.cancelAuthentication();
-                super.onAuthenticationError(errorCode, errString);
-            }
+        @Override
+        public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+            if (biometricPrompt != null)
+                biometricPrompt.cancelAuthentication();
+            super.onAuthenticationError(errorCode, errString);
+        }
 
-            @Override
-            public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
-                super.onAuthenticationSucceeded(result);
-                Toast.makeText(HomePageActivity.this, "Biometric Authentication Successful", Toast.LENGTH_SHORT).show();
-            }
+        @Override
+        public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+            super.onAuthenticationSucceeded(result);
+            Toast.makeText(HomePageActivity.this, "Biometric Authentication Successful", Toast.LENGTH_SHORT).show();
+        }
 
-            @Override
-            public void onAuthenticationFailed() {
-                super.onAuthenticationFailed();
-            }
+        @Override
+        public void onAuthenticationFailed() {
+            super.onAuthenticationFailed();
+        }
     };
 
     //method to sign users out from GoogleSignInClient

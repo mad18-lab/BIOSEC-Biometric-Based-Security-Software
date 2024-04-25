@@ -316,7 +316,7 @@ public class HomePageActivity extends AppCompatActivity {
                 break;
 
             case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                Toast.makeText(this, "Fingerprint Not Added; Kindly Enroll A Fingerprint In Your Settings", Toast.LENGTH_SHORT).show();
+                promptEnrollFingerprint();
                 break;
         }
     }

@@ -9,13 +9,17 @@ import androidx.biometric.BiometricPrompt;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
@@ -63,6 +67,7 @@ public class HomePageActivity extends AppCompatActivity {
     ActionBarDrawerToggle drawerToggle;
     Button scanButton;
     SharedPreferences sharedPreferences;
+    private static final int REQUEST_CODE_ENROLL_FINGERPRINT = 103;
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -85,6 +90,7 @@ public class HomePageActivity extends AppCompatActivity {
         drawerToggle.syncState();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         scanButton = findViewById(R.id.scanner);
+
 
         mAuth = FirebaseAuth.getInstance();     //for signing users out
 
@@ -298,8 +304,7 @@ public class HomePageActivity extends AppCompatActivity {
         BiometricManager biometricManager = BiometricManager.from(this);
         switch(biometricManager.canAuthenticate()) {
             case BiometricManager.BIOMETRIC_SUCCESS:
-                BiometricPrompt.PromptInfo promptInfo = buildPrompt();
-                biometricPrompt.authenticate(promptInfo);
+                showBiometricPrompt(buildPrompt());
                 break;
 
             case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
@@ -308,20 +313,43 @@ public class HomePageActivity extends AppCompatActivity {
 
             case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
                 Toast.makeText(this, "Biometric Authentication Unsuccessful", Toast.LENGTH_SHORT).show();
+                break;
 
             case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                Toast.makeText(this, "No Fingerprint Assigned", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Fingerprint Not Added; Kindly Enroll A Fingerprint In Your Settings", Toast.LENGTH_SHORT).show();
+                break;
         }
     }
 
-    //method to build biometric prompt
+    //method to launch fingerprint registration system
+    private void promptEnrollFingerprint() {
+        // Redirect the user to enroll their fingerprint
+        // For example, you can launch the system settings to enroll fingerprint
+        Intent enrollIntent = new Intent(Settings.ACTION_SECURITY_SETTINGS);
+        startActivityForResult(enrollIntent, REQUEST_CODE_ENROLL_FINGERPRINT);
+    }
+
+    //method to build Biometric Prompt
     BiometricPrompt.PromptInfo buildPrompt() {
+        String title = "Unlock Your Files";
+        String subtitle = "Use your registered fingerprint to unlock files on your connected desktop device";
+        String description = "This will securely authenticate and unlock the files using your fingerprint";
+
         return new BiometricPrompt.PromptInfo.Builder()
-                .setTitle("BioSec")
+                .setTitle(title)
+                .setSubtitle(subtitle)
+                .setDescription(description)
+                .setNegativeButtonText("Cancel") // Set a non-empty string for the negative button, VERY important for the prompt to work
                 .build();
     }
 
-    //method to build and authenticate biometric prompt
+    // method to show Biometric Prompt
+    void showBiometricPrompt(BiometricPrompt.PromptInfo promptInfo) {
+        biometricPrompt = new BiometricPrompt(this, Executors.newSingleThreadExecutor(), callback);
+        biometricPrompt.authenticate(promptInfo);
+    }
+
+    //method to authenticate Biometric Prompt and provide appropriate callback
     BiometricPrompt.AuthenticationCallback callback = new BiometricPrompt.AuthenticationCallback() {
         @Override
         public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
@@ -333,7 +361,12 @@ public class HomePageActivity extends AppCompatActivity {
         @Override
         public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
             super.onAuthenticationSucceeded(result);
-            Toast.makeText(HomePageActivity.this, "Biometric Authentication Successful", Toast.LENGTH_SHORT).show();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(HomePageActivity.this, "Biometric Authentication Successful: Files Unlocked", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         @Override

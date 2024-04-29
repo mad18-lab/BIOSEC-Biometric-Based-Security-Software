@@ -31,7 +31,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.biosec.network.MyApi;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -167,7 +166,7 @@ public class HomePageActivity extends AppCompatActivity {
 
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
-                .url("ws://cpp-server-ip-address:port")
+                .url("ws://cpp-server-ip-address:5080")
                 .build();
 
         WebSocketListener webSocketListener = new WebSocketListener() {

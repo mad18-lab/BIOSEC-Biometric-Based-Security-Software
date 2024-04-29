@@ -31,6 +31,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.biosec.network.MyApi;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -49,11 +50,16 @@ import com.google.zxing.integration.android.IntentResult;
 import com.example.biosec.network.YourApiService;
 
 import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 import retrofit2.Callback;
 import retrofit2.Call;
-import retrofit2.Response;
+//import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -68,6 +74,8 @@ public class HomePageActivity extends AppCompatActivity {
     Button scanButton;
     SharedPreferences sharedPreferences;
     private static final int REQUEST_CODE_ENROLL_FINGERPRINT = 103;
+    OkHttpClient client;
+    WebSocket webSocket;
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -156,6 +164,51 @@ public class HomePageActivity extends AppCompatActivity {
         if (biometricPrompt==null){
             biometricPrompt=new BiometricPrompt(this,executor,callback);
         }
+
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url("ws://cpp-server-ip-address:port")
+                .build();
+
+        WebSocketListener webSocketListener = new WebSocketListener() {
+            @Override
+            public void onOpen(WebSocket webSocket, Response response) {
+                super.onOpen(webSocket, response);
+                // WebSocket connection established
+            }
+
+            @Override
+            public void onMessage(WebSocket webSocket, String text) {
+                super.onMessage(webSocket, text);
+                // Received a text message
+            }
+
+            @Override
+            public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+                super.onFailure(webSocket, t, response);
+                // WebSocket connection failure
+            }
+        };
+
+        webSocket = client.newWebSocket(request, webSocketListener);
+
+//        //initialize OkHttpClient and WebSocket connection
+//        client = new OkHttpClient.Builder().build();
+//        Request request = new Request.Builder()
+//                .url("ws://your-server-address:port/your-websocket-endpoint") // Replace with your endpoint
+//                .build();
+//
+//        //to receive and check for message
+//        webSocket = client.newWebSocket(request, new WebSocketListener() {
+//            @Override
+//            public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
+//                super.onMessage(webSocket, text);
+//                //check if the message has the word "Bio"
+//                if (text.toLowerCase().contains("bio")) {
+//                    checkAndauth();
+//                }
+//            }
+//        });
     }
 
     // Function to update navigation drawer header with user's name
@@ -192,7 +245,7 @@ public class HomePageActivity extends AppCompatActivity {
             String scannedData = result.getContents();
 
             if (scannedData != null && isValidQRCode(scannedData)) {
-                processScannedData(scannedData);
+//                processScannedData(scannedData);
             } else {
                 //display invalid QR code message
                 Toast.makeText(this, "Invalid QR Code", Toast.LENGTH_SHORT).show();
@@ -206,83 +259,83 @@ public class HomePageActivity extends AppCompatActivity {
         return data.startsWith("PREFIX_");
     }
 
-    //device registration process
-    private void processScannedData(String scannedData) {
-        //send the scanned data to the server for registration
-        registerDeviceWithServer(scannedData);
-    }
+//    //device registration process
+//    private void processScannedData(String scannedData) {
+//        //send the scanned data to the server for registration
+//        registerDeviceWithServer(scannedData);
+//    }
 
-    private void registerDeviceWithServer(String scannedData) {
-        //here we will send scanned data to server using Retrofit library
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://your-server.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        YourApiService service = retrofit.create(YourApiService.class);
-
-        //creating a request body containing the scanned data
-        RequestBody requestBody = RequestBody.create(MediaType.parse("text/plain"), scannedData);
-
-        //Making a POST request to connect the device
-        Call<ResponseBody> call = service.establishConnection(requestBody);
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    //device registered successfully
-                    Toast.makeText(HomePageActivity.this, "Device Registered Successfully", Toast.LENGTH_SHORT).show();
-                } else {
-                    //error registering device
-                    Toast.makeText(HomePageActivity.this, "Error Registering Device", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                // Network error
-                Toast.makeText(HomePageActivity.this, "Network error", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    //communication process b/w the Android and Desktop apps using the REST API server
-    //a method to unlock folders
-    private void unlockFolders() {
-        // Assuming you have the authentication token obtained during registration
-        String authToken = "your_authentication_token";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://your-server.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        YourApiService service = retrofit.create(YourApiService.class);
-
-        // Create a request body containing necessary data
-        RequestBody requestBody = RequestBody.create(MediaType.parse("text/plain"), authToken);
-
-        // Make a POST request to unlock folders
-        Call<Void> call = service.unlockFolders(requestBody);
-        call.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    // Folders unlocked successfully
-                    Toast.makeText(HomePageActivity.this, "Folders unlocked successfully", Toast.LENGTH_SHORT).show();
-                } else {
-                    // Error unlocking folders
-                    Toast.makeText(HomePageActivity.this, "Error unlocking folders", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                // Network error
-                Toast.makeText(HomePageActivity.this, "Network error", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+//    private void registerDeviceWithServer(String scannedData) {
+//        //here we will send scanned data to server using Retrofit library
+//        Retrofit retrofit = new Retrofit.Builder()
+//                .baseUrl("http://your-server.com/")
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .build();
+//
+//        YourApiService service = retrofit.create(YourApiService.class);
+//
+//        //creating a request body containing the scanned data
+//        RequestBody requestBody = RequestBody.create(MediaType.parse("text/plain"), scannedData);
+//
+//        //Making a POST request to connect the device
+//        Call<ResponseBody> call = service.establishConnection(requestBody);
+//        call.enqueue(new Callback<ResponseBody>() {
+//            @Override
+//            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+//                if (response.isSuccessful()) {
+//                    //device registered successfully
+//                    Toast.makeText(HomePageActivity.this, "Device Registered Successfully", Toast.LENGTH_SHORT).show();
+//                } else {
+//                    //error registering device
+//                    Toast.makeText(HomePageActivity.this, "Error Registering Device", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<ResponseBody> call, Throwable t) {
+//                // Network error
+//                Toast.makeText(HomePageActivity.this, "Network error", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
+//
+//    //communication process b/w the Android and Desktop apps using the REST API server
+//    //a method to unlock folders
+//    private void unlockFolders() {
+//        // Assuming you have the authentication token obtained during registration
+//        String authToken = "your_authentication_token";
+//
+//        Retrofit retrofit = new Retrofit.Builder()
+//                .baseUrl("http://your-server.com/")
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .build();
+//
+//        YourApiService service = retrofit.create(YourApiService.class);
+//
+//        // Create a request body containing necessary data
+//        RequestBody requestBody = RequestBody.create(MediaType.parse("text/plain"), authToken);
+//
+//        // Make a POST request to unlock folders
+//        Call<Void> call = service.unlockFolders(requestBody);
+//        call.enqueue(new Callback<Void>() {
+//            @Override
+//            public void onResponse(Call<Void> call, Response<Void> response) {
+//                if (response.isSuccessful()) {
+//                    // Folders unlocked successfully
+//                    Toast.makeText(HomePageActivity.this, "Folders unlocked successfully", Toast.LENGTH_SHORT).show();
+//                } else {
+//                    // Error unlocking folders
+//                    Toast.makeText(HomePageActivity.this, "Error unlocking folders", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<Void> call, Throwable t) {
+//                // Network error
+//                Toast.makeText(HomePageActivity.this, "Network error", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
 
     //for bottom sheet notification dialog
     private void showDialog() {
@@ -365,8 +418,41 @@ public class HomePageActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     Toast.makeText(HomePageActivity.this, "Biometric Authentication Successful: Files Unlocked", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(HomePageActivity.this, "REST API call made successfully", Toast.LENGTH_SHORT).show();
                 }
             });
+
+            String response = "Biometric authentication successful!";
+            webSocket.send(response);
+
+//            //building Retrofit client
+//            Retrofit retrofit = new Retrofit.Builder()
+//                    .baseUrl("")
+//                    .addConverterFactory(GsonConverterFactory.create())
+//                    .build();
+//
+//            //create API interface
+//            MyApi api = retrofit.create(MyApi.class);
+//
+//            //call the API endpoint
+//            Call<ResponseBody> call = api.yourApiEndpoint("Biometric Data");
+//
+//            //send the request asynchronously
+//            call.enqueue(new Callback<ResponseBody>() {
+//                @Override
+//                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+//                    //handle successful response
+//                    if (response.isSuccessful()) {
+//                        Toast.makeText(HomePageActivity.this, "REST API call made successfully", Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(Call<ResponseBody> call, Throwable t) {
+//                    //handle failure scenario
+//                    Toast.makeText(HomePageActivity.this, "REST API call was unsuccessful", Toast.LENGTH_SHORT).show();
+//                }
+//            });
         }
 
         @Override

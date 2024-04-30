@@ -19,6 +19,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -31,6 +32,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.biosec.network.SecApiService;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -46,21 +48,27 @@ import java.util.concurrent.Executors;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import com.example.biosec.network.YourApiService;
+import com.example.biosec.network.ApiService;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
+//import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import retrofit2.Callback;
 import retrofit2.Call;
-//import retrofit2.Response;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.Body;
+import retrofit2.http.GET;
+import retrofit2.http.POST;
+
+import com.example.biosec.util.*;
+import com.example.biosec.model.*;
 
 public class HomePageActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
@@ -75,6 +83,8 @@ public class HomePageActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_ENROLL_FINGERPRINT = 103;
     OkHttpClient client;
     WebSocket webSocket;
+    Handler handler;
+    ApiService apiService;
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -164,32 +174,32 @@ public class HomePageActivity extends AppCompatActivity {
             biometricPrompt=new BiometricPrompt(this,executor,callback);
         }
 
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url("ws://cpp-server-ip-address:5080")
-                .build();
-
-        WebSocketListener webSocketListener = new WebSocketListener() {
-            @Override
-            public void onOpen(WebSocket webSocket, Response response) {
-                super.onOpen(webSocket, response);
-                // WebSocket connection established
-            }
-
-            @Override
-            public void onMessage(WebSocket webSocket, String text) {
-                super.onMessage(webSocket, text);
-                // Received a text message
-            }
-
-            @Override
-            public void onFailure(WebSocket webSocket, Throwable t, Response response) {
-                super.onFailure(webSocket, t, response);
-                // WebSocket connection failure
-            }
-        };
-
-        webSocket = client.newWebSocket(request, webSocketListener);
+//        OkHttpClient client = new OkHttpClient();
+//        Request request = new Request.Builder()
+//                .url("ws://cpp-server-ip-address:5080")
+//                .build();
+//
+//        WebSocketListener webSocketListener = new WebSocketListener() {
+//            @Override
+//            public void onOpen(WebSocket webSocket, Response response) {
+//                super.onOpen(webSocket, response);
+//                // WebSocket connection established
+//            }
+//
+//            @Override
+//            public void onMessage(WebSocket webSocket, String text) {
+//                super.onMessage(webSocket, text);
+//                // Received a text message
+//            }
+//
+//            @Override
+//            public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+//                super.onFailure(webSocket, t, response);
+//                // WebSocket connection failure
+//            }
+//        };
+//
+//        webSocket = client.newWebSocket(request, webSocketListener);
 
 //        //initialize OkHttpClient and WebSocket connection
 //        client = new OkHttpClient.Builder().build();
@@ -208,6 +218,49 @@ public class HomePageActivity extends AppCompatActivity {
 //                }
 //            }
 //        });
+
+        apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
+
+        handler = new Handler();
+        handler.postDelayed(checkRunnable, 1000);
+    }
+
+    private Runnable checkRunnable = new Runnable() {
+        @Override
+        public void run() {
+            checkCall();
+            handler.postDelayed(this, 1000);
+        }
+    };
+
+    private void checkCall() {
+        Call<CheckResponse> call = apiService.checkCall();
+        call.enqueue(new Callback<CheckResponse>() {
+            @Override
+            public void onResponse(Call<CheckResponse> call, retrofit2.Response<CheckResponse> response) {
+                if (response.isSuccessful()) {
+                    CheckResponse checkResponse = response.body();
+                    if (checkResponse != null) {
+                        String status = checkResponse.getStatus();
+                        if ("not_found".equals(status)) {
+                            //continue loop
+                        } else if ("request_found".equals(status)) {
+                            //initiate biometric authentication by first checking and authenticating user device
+                            checkAndauth();
+                        }
+                    } else {
+                        //handle error
+                        Toast.makeText(HomePageActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CheckResponse> call, Throwable t) {
+                //handle failure
+                Toast.makeText(getApplicationContext(), "An error has occured", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     // Function to update navigation drawer header with user's name
@@ -403,6 +456,9 @@ public class HomePageActivity extends AppCompatActivity {
 
     //method to authenticate Biometric Prompt and provide appropriate callback
     BiometricPrompt.AuthenticationCallback callback = new BiometricPrompt.AuthenticationCallback() {
+        //create instances of interface
+        SecApiService secApiService = postRetrofitClient.getRetrofitInstance().create(SecApiService.class);
+
         @Override
         public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
             if (biometricPrompt != null)
@@ -413,50 +469,64 @@ public class HomePageActivity extends AppCompatActivity {
         @Override
         public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
             super.onAuthenticationSucceeded(result);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(HomePageActivity.this, "Biometric Authentication Successful: Files Unlocked", Toast.LENGTH_SHORT).show();
-                    Toast.makeText(HomePageActivity.this, "REST API call made successfully", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            String response = "Biometric authentication successful!";
-            webSocket.send(response);
-
-//            //building Retrofit client
-//            Retrofit retrofit = new Retrofit.Builder()
-//                    .baseUrl("")
-//                    .addConverterFactory(GsonConverterFactory.create())
-//                    .build();
-//
-//            //create API interface
-//            MyApi api = retrofit.create(MyApi.class);
-//
-//            //call the API endpoint
-//            Call<ResponseBody> call = api.yourApiEndpoint("Biometric Data");
-//
-//            //send the request asynchronously
-//            call.enqueue(new Callback<ResponseBody>() {
+//            runOnUiThread(new Runnable() {
 //                @Override
-//                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-//                    //handle successful response
-//                    if (response.isSuccessful()) {
-//                        Toast.makeText(HomePageActivity.this, "REST API call made successfully", Toast.LENGTH_SHORT).show();
-//                    }
-//                }
-//
-//                @Override
-//                public void onFailure(Call<ResponseBody> call, Throwable t) {
-//                    //handle failure scenario
-//                    Toast.makeText(HomePageActivity.this, "REST API call was unsuccessful", Toast.LENGTH_SHORT).show();
+//                public void run() {
+//                    Toast.makeText(HomePageActivity.this, "Biometric Authentication Successful: Files Unlocked", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(HomePageActivity.this, "REST API call made successfully", Toast.LENGTH_SHORT).show();
 //                }
 //            });
+//
+//            String response = "Biometric authentication successful!";
+//            webSocket.send(response);
+
+
+
+            //send the request asynchronously
+            Call<CreateResponse> call = secApiService.postCreateResponse(new CreateResponse("Correct"));
+
+            call.enqueue(new Callback<CreateResponse>() {
+                @Override
+                public void onResponse(Call<CreateResponse> call, Response<CreateResponse> response) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(HomePageActivity.this, "Biometric Authentication Successful: Files Unlocked", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(HomePageActivity.this, "REST API call made successfully", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onFailure(Call<CreateResponse> call, Throwable t) {
+                    Toast.makeText(HomePageActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         @Override
         public void onAuthenticationFailed() {
             super.onAuthenticationFailed();
+            //send the request asynchronously
+            Call<CreateResponse> call = secApiService.postCreateResponse(new CreateResponse("Wrong"));
+
+            call.enqueue(new Callback<CreateResponse>() {
+                @Override
+                public void onResponse(Call<CreateResponse> call, Response<CreateResponse> response) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(HomePageActivity.this, "Biometric Authentication Unsuccessful: Files Unlocked", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(HomePageActivity.this, "REST API call was not made", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onFailure(Call<CreateResponse> call, Throwable t) {
+                    Toast.makeText(HomePageActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
     };
 
